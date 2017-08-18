@@ -16,23 +16,24 @@ public class MaterialGroupInfo {
 
     String name;
     String mTextureSetName;
+    boolean usesCTexture;
 
     public MaterialGroupInfo() {
         name = null;
         mTextureSetName = null;
+        usesCTexture = false;
     }
 
     Path[] mTextures = new Path[MainForm.eSuffix.values().length / 2];
-    Path[] cTextures = new Path[MainForm.eSuffix.values().length / 2];
+//    Path[] cTextures = new Path[MainForm.eSuffix.values().length / 2];
 
     Icon isOkIcon;
 
-    void resetCTextures() {
-        for (int i = 0; i < cTextures.length; i++) {
-            cTextures[i] = null;
-        }
-    }
-
+//    void resetCTextures() {
+//        for (int i = 0; i < cTextures.length; i++) {
+//            cTextures[i] = null;
+//        }
+//    }
     void resetMTextures() {
         for (int i = 0; i < mTextures.length; i++) {
             mTextures[i] = null;

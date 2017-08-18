@@ -31,15 +31,19 @@ import javax.swing.DefaultCellEditor;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
 
 /**
  *
@@ -52,6 +56,7 @@ public class MainForm extends javax.swing.JFrame {
 
     String fbxmodelName = null;
     ArrayList<MaterialGroupInfo> materialgroups = null;
+    Path[] cTextures = null;
 
     boolean shouldMTextureSetsBeFilled = false;
 
@@ -63,6 +68,7 @@ public class MainForm extends javax.swing.JFrame {
         correctIcon = new ImageIcon("correctSmall.png");
         wrongIcon = new ImageIcon("wrongSmall.png");
         materialgroups = new ArrayList<>();
+        cTextures = new Path[MainForm.eSuffix.values().length / 2];
     }
 
     /**
@@ -82,6 +88,8 @@ public class MainForm extends javax.swing.JFrame {
         table = new javax.swing.JTable();
         progressBar = new javax.swing.JProgressBar();
         generateJsonButton = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        cTextureSetText = new javax.swing.JLabel();
 
         {
             Preferences pref = Preferences.userRoot();
@@ -110,7 +118,7 @@ public class MainForm extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(fbxFileChooser, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(fbxFileChooser, javax.swing.GroupLayout.DEFAULT_SIZE, 508, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -128,14 +136,14 @@ public class MainForm extends javax.swing.JFrame {
 
             },
             new String [] {
-                "MaterialGroup", "IsOk", "C_TextureSet", "M_TextureSet", "M_SetName", "", ""
+                "Material Group", "Is Ok", "Uses C_Texture Set", "M_Texture Set", "M_Texture Set Name", "", ""
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.Object.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class
+                java.lang.String.class, java.lang.Object.class, java.lang.Boolean.class, java.lang.String.class, java.lang.String.class, java.lang.Object.class, java.lang.Object.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, true, true
+                false, false, true, false, false, true, true
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -146,17 +154,19 @@ public class MainForm extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
+        table.getModel().addTableModelListener(new CheckBoxTableModelListener());
         jScrollPane1.setViewportView(table);
         if (table.getColumnModel().getColumnCount() > 0) {
-            table.getColumnModel().getColumn(0).setResizable(false);
-            table.getColumnModel().getColumn(1).setMinWidth(32);
-            table.getColumnModel().getColumn(1).setPreferredWidth(32);
-            table.getColumnModel().getColumn(1).setMaxWidth(32);
+            table.getColumnModel().getColumn(0).setMinWidth(150);
+            table.getColumnModel().getColumn(0).setPreferredWidth(150);
+            table.getColumnModel().getColumn(0).setMaxWidth(150);
+            table.getColumnModel().getColumn(1).setMinWidth(40);
+            table.getColumnModel().getColumn(1).setPreferredWidth(40);
+            table.getColumnModel().getColumn(1).setMaxWidth(40);
             table.getColumnModel().getColumn(1).setCellRenderer(new JTableIconRenderer());
-            table.getColumnModel().getColumn(2).setMinWidth(150);
-            table.getColumnModel().getColumn(2).setPreferredWidth(150);
-            table.getColumnModel().getColumn(2).setMaxWidth(150);
-            table.getColumnModel().getColumn(2).setCellRenderer(new JTableTextureTypesRenderer());
+            table.getColumnModel().getColumn(2).setMinWidth(110);
+            table.getColumnModel().getColumn(2).setPreferredWidth(110);
+            table.getColumnModel().getColumn(2).setMaxWidth(110);
             table.getColumnModel().getColumn(3).setMinWidth(150);
             table.getColumnModel().getColumn(3).setPreferredWidth(150);
             table.getColumnModel().getColumn(3).setMaxWidth(150);
@@ -180,6 +190,11 @@ public class MainForm extends javax.swing.JFrame {
             }
         });
 
+        jLabel1.setText("C_Texture Set: ");
+
+        cTextureSetText.setBackground(new java.awt.Color(255, 255, 255));
+        cTextureSetText.setOpaque(true);
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -187,18 +202,26 @@ public class MainForm extends javax.swing.JFrame {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 616, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 658, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(progressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(generateJsonButton)))
+                        .addComponent(generateJsonButton))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(cTextureSetText, javax.swing.GroupLayout.PREFERRED_SIZE, 536, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 473, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(cTextureSetText))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(generateJsonButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -253,14 +276,6 @@ public class MainForm extends javax.swing.JFrame {
 
         Preferences pref = Preferences.userRoot();
         Path path = Paths.get(pref.get("LASTFBXMODEL_PATH", ""));
-        File fOutJson = new File(path + "\\" + fbxmodelName + ".json");
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(fOutJson);
-        } catch (FileNotFoundException ex) {
-            System.err.println(ex.getMessage());
-            return;
-        }
 
         // Init additional textures folder
         Path texturesPath = Paths.get(path.toString() + "\\" + fbxmodelName + "_textures");
@@ -281,14 +296,25 @@ public class MainForm extends javax.swing.JFrame {
             }
         }
 
+        // Init Json writer
+        File fOutJson = new File(path + "\\" + fbxmodelName + ".json");
+        FileOutputStream fos;
+        try {
+            fos = new FileOutputStream(fOutJson);
+        } catch (FileNotFoundException ex) {
+            System.err.println(ex.getMessage());
+            return;
+        }
         Map<String, Object> properties = new HashMap<>();
         properties.put(JsonGenerator.PRETTY_PRINTING, true);
         JsonWriterFactory writerFactory = Json.createWriterFactory(properties);
+
+        // Write Json file
         try (JsonWriter jsonWriter = writerFactory.createWriter(fos)) {
-            
+
             JsonObjectBuilder modelBuilder = Json.createObjectBuilder();
             modelBuilder.add("fbxname", fbxmodelName);
-            
+
             JsonArrayBuilder materialsGroupBuilder = Json.createArrayBuilder();
             for (MaterialGroupInfo materialGroup : materialgroups) {
                 JsonObjectBuilder materialGroupBuilder = Json.createObjectBuilder();
@@ -311,12 +337,14 @@ public class MainForm extends javax.swing.JFrame {
                         isEmpty = false;
                     }
                 }
-                for (int i = 0; i < materialGroup.cTextures.length; i++) {
-                    if (materialGroup.cTextures[i] != null) {
-                        String textureSuffix = eSuffix.values()[i + eSuffix.values().length / 2].name();
-                        Path texturePath = materialGroup.cTextures[i].getFileName();
-                        materialGroupBuilder.add(textureSuffix, texturePath.toString());
-                        isEmpty = false;
+                if (materialGroup.usesCTexture) {
+                    for (int i = 0; i < cTextures.length; i++) {
+                        if (cTextures[i] != null) {
+                            String textureSuffix = eSuffix.values()[i + eSuffix.values().length / 2].name();
+                            Path texturePath = cTextures[i].getFileName();
+                            materialGroupBuilder.add(textureSuffix, texturePath.toString());
+                            isEmpty = false;
+                        }
                     }
                 }
                 if (!isEmpty) {
@@ -367,8 +395,10 @@ public class MainForm extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel cTextureSetText;
     private javax.swing.JFileChooser fbxFileChooser;
     private javax.swing.JButton generateJsonButton;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
@@ -386,8 +416,10 @@ public class MainForm extends javax.swing.JFrame {
         Preferences pref = Preferences.userRoot();
         Path fbxpath = Paths.get(pref.get("LASTFBXMODEL_PATH", ""));
 
-        int nMaterialGroups = stringhe.length / FbxSdkWrapper.GROUP_SIZE;
         materialgroups.clear();
+        for (int i = 0; i < cTextures.length; i++) {
+            cTextures[i] = null;
+        }
 
         // check if textures in fbx are valid and copy near fbx file if they don't exist yet
         for (int i = 0; i < stringhe.length; i += FbxSdkWrapper.GROUP_SIZE) {
@@ -406,17 +438,39 @@ public class MainForm extends javax.swing.JFrame {
             materialGroup.isOkIcon = correctIcon;
 
             if (!diffuseNoPathNoExt.isEmpty()) {
-                if (checkTextureSetName(materialGroup.name, diffuseNoPathNoExt) != null) {
-                    copy(stringhe[i + 1], fbxpath + "\\" + diffuseNoPath);
-                } else {
+                eSuffix suffix = checkTextureSetName(fbxmodelName, diffuseNoPathNoExt);
+                if (suffix != null && suffix != eSuffix.D2) {
                     materialGroup.isOkIcon = wrongIcon;
+                } else {
+                    if (suffix == null) {
+                        suffix = checkTextureSetName(materialGroup.name, diffuseNoPathNoExt);
+                    }
+                    if (suffix == eSuffix.D2) {
+                        materialGroup.usesCTexture = true;
+                    }
+                    if (suffix == eSuffix.D || suffix == eSuffix.D2) {
+                        copy(stringhe[i + 1], fbxpath + "\\" + diffuseNoPath);
+                    } else {
+                        materialGroup.isOkIcon = wrongIcon;
+                    }
                 }
             }
             if (!normalNoPathNoExt.isEmpty()) {
-                if (checkTextureSetName(materialGroup.name, normalNoPathNoExt) != null) {
-                    copy(stringhe[i + 2], fbxpath + "\\" + normalNoPath);
-                } else {
+                eSuffix suffix = checkTextureSetName(fbxmodelName, normalNoPathNoExt);
+                if (suffix != null && suffix != eSuffix.N2) {
                     materialGroup.isOkIcon = wrongIcon;
+                } else {
+                    if (suffix == null) {
+                        suffix = checkTextureSetName(materialGroup.name, normalNoPathNoExt);
+                    }
+                    if (suffix == eSuffix.N2) {
+                        materialGroup.usesCTexture = true;
+                    }
+                    if (suffix == eSuffix.N || suffix == eSuffix.N2) {
+                        copy(stringhe[i + 2], fbxpath + "\\" + normalNoPath);
+                    } else {
+                        materialGroup.isOkIcon = wrongIcon;
+                    }
                 }
             }
         }
@@ -433,8 +487,12 @@ public class MainForm extends javax.swing.JFrame {
             setTexturesInfo(materialGroup.name, materialGroup, true, true, fbxTextures);
 
             // add table row
-            ((DefaultTableModel) table.getModel()).addRow(new Object[]{materialGroup.name, materialGroup.isOkIcon, materialGroup.cTextures, materialGroup.mTextures, materialGroup.mTextureSetName});
+//            ((DefaultTableModel) table.getModel()).addRow(new Object[]{materialGroup.name, materialGroup.isOkIcon, materialGroup.cTextures, materialGroup.mTextures, materialGroup.mTextureSetName});
+            ((DefaultTableModel) table.getModel()).addRow(new Object[]{materialGroup.name, materialGroup.isOkIcon, materialGroup.usesCTexture, materialGroup.mTextures, materialGroup.mTextureSetName});
         }
+
+        // update cTexture Set editbox
+        cTextureSetText.setText(formatTextureTypes(cTextures));
     }
 
     private void collectTextures(Path path, HashMap<String, Path> textures) {
@@ -451,27 +509,32 @@ public class MainForm extends javax.swing.JFrame {
 
     private void setTexturesInfo(String mTextureSetName, MaterialGroupInfo materialGroup, boolean doForMTextures, boolean doForCTextures, HashMap<String, Path> textures) {
 
-        if (doForCTextures) {
-            materialGroup.resetCTextures();
-        }
+//        if (doForCTextures) {
+//            materialGroup.resetCTextures();
+//        }
         if (doForMTextures) {
             materialGroup.resetMTextures();
         }
 
         for (HashMap.Entry<String, Path> texture : textures.entrySet()) {
+
             String textureName = texture.getKey();
             Path texturePath = texture.getValue();
             eSuffix suffix = checkTextureSetName(mTextureSetName, textureName);
-            if (suffix != null) {
-                if (suffix.ordinal() < eSuffix.values().length / 2) {
-                    if (doForMTextures) {
-                        materialGroup.mTextures[suffix.ordinal()] = texturePath;
-                        materialGroup.mTextureSetName = textureName.substring(0, textureName.length() - suffix.toString().length() - 1);
-                    }
-                } else {
-                    if (doForCTextures) {
-                        materialGroup.cTextures[suffix.ordinal() - eSuffix.values().length / 2] = texturePath;
-                    }
+
+            if (doForMTextures) {
+                if (suffix != null && suffix.ordinal() < eSuffix.values().length / 2) {
+                    materialGroup.mTextures[suffix.ordinal()] = texturePath;
+                    materialGroup.mTextureSetName = textureName.substring(0, textureName.length() - suffix.toString().length() - 1);
+                }
+            }
+
+            if (doForCTextures) {
+                if (suffix == null) {
+                    suffix = checkTextureSetName(fbxmodelName, textureName);
+                }
+                if (suffix != null && suffix.ordinal() >= eSuffix.values().length / 2) {
+                    cTextures[suffix.ordinal() - eSuffix.values().length / 2] = texturePath;
                 }
             }
         }
@@ -574,8 +637,8 @@ public class MainForm extends javax.swing.JFrame {
             setTexturesInfo(newMTextureSetName, toChange, true, false, libraryTextures);
             toChange.mTextureSetName = newMTextureSetName;
 
-            table.getModel().setValueAt(toChange.mTextures, row, 3);
-            table.getModel().setValueAt(toChange.mTextureSetName, row, 4);
+            table.getModel().setValueAt(toChange.mTextures, row, eColumns.M_TEXTURE_SET.ordinal());
+            table.getModel().setValueAt(toChange.mTextureSetName, row, eColumns.M_TEXTURE_SET_NAME.ordinal());
 
             Preferences pref = Preferences.userRoot();
             pref.put("TEXTURESLIB_PATH", path.toString());
@@ -598,8 +661,8 @@ public class MainForm extends javax.swing.JFrame {
 
         toChange.mTextureSetName = null;
         toChange.resetMTextures();
-        table.getModel().setValueAt(toChange.mTextures, row, 3);
-        table.getModel().setValueAt(toChange.mTextureSetName, row, 4);
+        table.getModel().setValueAt(toChange.mTextures, row, eColumns.M_TEXTURE_SET.ordinal());
+        table.getModel().setValueAt(toChange.mTextureSetName, row, eColumns.M_TEXTURE_SET_NAME.ordinal());
     }
 
     public javax.swing.JFileChooser getFbxFileChooser() {
@@ -613,6 +676,20 @@ public class MainForm extends javax.swing.JFrame {
             }
         }
         return true;
+    }
+
+    private class CheckBoxTableModelListener implements TableModelListener {
+
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            int row = e.getFirstRow();
+            int column = e.getColumn();
+            if (column == eColumns.USES_C_TEXTURE.ordinal()) {
+                TableModel model = (TableModel) e.getSource();
+                boolean checkBoxValue = (boolean) model.getValueAt(row, column);
+                materialgroups.get(row).usesCTexture = checkBoxValue;
+            }
+        }
     }
 
     private class JTableButtonRenderer implements TableCellRenderer {
@@ -681,21 +758,26 @@ public class MainForm extends javax.swing.JFrame {
         }
     }
 
+    private String formatTextureTypes(Path[] paths) {
+        String text = "";
+        for (int i = 0; i < paths.length; ++i) {
+            if (paths[i] != null) {
+                text += String.format("<html><b><font color=%s>%s</font></b> ", colors[i], eSuffix.values()[i].name());
+            }
+//                else {
+//                    text += suffixes[i].toLowerCase() + " ";
+//                }
+        }
+        return text;
+    }
+
     private class JTableTextureTypesRenderer implements TableCellRenderer {
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             JLabel label = new JLabel();
             Path[] paths = (Path[]) value;
-            String text = "";
-            for (int i = 0; i < paths.length; ++i) {
-                if (paths[i] != null) {
-                    text += String.format("<html><b><font color=%s>%s</font></b> ", colors[i], eSuffix.values()[i].name());
-                }
-//                else {
-//                    text += suffixes[i].toLowerCase() + " ";
-//                }
-            }
+            String text = formatTextureTypes(paths);
             label.setText(text);
             return label;
         }
@@ -724,6 +806,16 @@ public class MainForm extends javax.swing.JFrame {
         "jpg",
         "png"
     };
+
+    enum eColumns {
+        MATERIAL_GROUP,
+        IS_OK,
+        USES_C_TEXTURE,
+        M_TEXTURE_SET,
+        M_TEXTURE_SET_NAME,
+        CHANGE_M_TEXTURE_SET,
+        DELETE_M_TEXTURE_SET
+    }
 
     static String imageExtString = null;
 
